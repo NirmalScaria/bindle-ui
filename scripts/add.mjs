@@ -17,18 +17,17 @@ export const add = new Command("add")
 async function addAction(componentId) {
     console.log(`Adding component ${componentId}`)
     const component = await fetchComponent(componentId, true)
-    const config = await getConfig();
     if(component === undefined) {
         console.log(chalk.red("Component not found! Make sure the name is correct."));
         return;
     }
-    const targetDirectory = path.join(process.cwd(), config.componentDirectory, component.location);
+    var targetFile = path.join(process.cwd(), component.location);
+    const targetDirectory = path.dirname(targetFile);
     try {
         await fs.access(targetDirectory);
     } catch (error) {
         await fs.mkdir(targetDirectory, { recursive: true });
     }
-    const targetFile = path.join(targetDirectory, `${component.name}.tsx`)
     await fs
         .writeFile(targetFile, component.content)
         .then(() => {
