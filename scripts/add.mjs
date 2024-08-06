@@ -2,11 +2,11 @@
 
 import { Command } from "commander";
 import { getConfig } from "./utils/getConfig.mjs";
-import fs from "fs/promises";
-import path from "path";
+
 import { fetchComponent } from "./utils/fetchComponent.mjs";
 import chalk from 'chalk';
 import { execSync } from "child_process";
+import { copyFile } from "./utils/copyFile.mjs";
 
 export const add = new Command("add")
     .description("Add a new component")
@@ -44,48 +44,21 @@ async function addAction(componentId) {
 
     console.log(chalk.green(`✔ Component ${component.id} added successfully!`));
 
-    async function copyFile({ fileName, content }) {
-        var targetFile = path.join(process.cwd(), fileName);
-        const targetDirectory = path.dirname(targetFile);
-        try {
-            await fs.access(targetDirectory);
-        } catch (error) {
-            await fs.mkdir(targetDirectory, { recursive: true });
-        }
-        await fs
-            .writeFile(targetFile, content)
-            .then(() => {
-            })
-            .catch((error) => {
-                throw("Error adding component: ", error);
-            });
-    }
-
     async function decodeLocations() {
         for (const [key, value] of Object.entries(filesToAdd)) {
             filesToAdd[key] = await decodeImports({ sourceCode: value, replacements: relativeImportLocations, currentLocation: key });
         }
     }
     async function decodeImports({ sourceCode, replacements, currentLocation }) {
-        // Regex to match any string enclosed in quotes (single, double, or backticks) and starts with @@
         const stringPattern = /(['"`])(@@[\s\S]*?)\1/g;
-
-        // Replace all matches
         const result = sourceCode.replace(stringPattern, (match, quote, str) => {
-            // Check if the replacement exists in the map
             const rawString = str.slice(3);
             const replacement = replacements[rawString];
             if (replacement !== undefined) {
-                // replacement string contains the location of a target file.
-                // We need to convert this to a relative path from the current file
-                // find the level of nesting of the current file
                 const currentLocationParts = currentLocation.split('/');
-                // add a ../ for each part in the current location
                 const relativePath = '../'.repeat(currentLocationParts.length - 1);
-                // add the replacement to the relative path
                 return `${quote}${relativePath}${replacement}${quote}`;
             }
-            // If no replacement found, return the original match
             return match;
         });
 
