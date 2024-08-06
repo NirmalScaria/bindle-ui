@@ -24,6 +24,7 @@ async function addAction(componentId) {
     var tailwindAdditionalConfig = {};
     const component = await fetchComponent(componentId, true)
     await parseTree({ currentComponent: component });
+    await decodeLocations();
     var remoteInstallCommand = "npm install ";
     for (const remoteDependancy of remoteDependencies) {
         remoteInstallCommand += `${remoteDependancy.name}@${remoteDependancy.version} `;
@@ -36,21 +37,60 @@ async function addAction(componentId) {
         console.log(chalk.red("Failed to install the component."));
         return;
     }
-    var targetFile = path.join(process.cwd(), component.location);
-    const targetDirectory = path.dirname(targetFile);
-    try {
-        await fs.access(targetDirectory);
-    } catch (error) {
-        await fs.mkdir(targetDirectory, { recursive: true });
+
+    for (const [fileName, content] of Object.entries(filesToAdd)) {
+        await copyFile({ fileName, content });
     }
-    await fs
-        .writeFile(targetFile, component.content)
-        .then(() => {
-            console.log(chalk.green("✔ Component added successfully!"));
-        })
-        .catch((error) => {
-            console.error(chalk.red("Error adding component: ", error));
+
+    console.log(chalk.green(`✔ Component ${component.id} added successfully!`));
+
+    async function copyFile({ fileName, content }) {
+        var targetFile = path.join(process.cwd(), fileName);
+        const targetDirectory = path.dirname(targetFile);
+        try {
+            await fs.access(targetDirectory);
+        } catch (error) {
+            await fs.mkdir(targetDirectory, { recursive: true });
+        }
+        await fs
+            .writeFile(targetFile, content)
+            .then(() => {
+            })
+            .catch((error) => {
+                throw("Error adding component: ", error);
+            });
+    }
+
+    async function decodeLocations() {
+        for (const [key, value] of Object.entries(filesToAdd)) {
+            filesToAdd[key] = await decodeImports({ sourceCode: value, replacements: relativeImportLocations, currentLocation: key });
+        }
+    }
+    async function decodeImports({ sourceCode, replacements, currentLocation }) {
+        // Regex to match any string enclosed in quotes (single, double, or backticks) and starts with @@
+        const stringPattern = /(['"`])(@@[\s\S]*?)\1/g;
+
+        // Replace all matches
+        const result = sourceCode.replace(stringPattern, (match, quote, str) => {
+            // Check if the replacement exists in the map
+            const rawString = str.slice(3);
+            const replacement = replacements[rawString];
+            if (replacement !== undefined) {
+                // replacement string contains the location of a target file.
+                // We need to convert this to a relative path from the current file
+                // find the level of nesting of the current file
+                const currentLocationParts = currentLocation.split('/');
+                // add a ../ for each part in the current location
+                const relativePath = '../'.repeat(currentLocationParts.length - 1);
+                // add the replacement to the relative path
+                return `${quote}${relativePath}${replacement}${quote}`;
+            }
+            // If no replacement found, return the original match
+            return match;
         });
+
+        return result;
+    }
 
     async function parseTree({ currentComponent }) {
         filesToAdd[currentComponent.location] = currentComponent.content;
