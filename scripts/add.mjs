@@ -7,6 +7,7 @@ import { fetchComponent } from "./utils/fetchComponent.mjs";
 import chalk from 'chalk';
 import { execSync } from "child_process";
 import { copyFile } from "./utils/copyFile.mjs";
+import { applyTailwindConfig } from "./utils/applyTailwindConfig.mjs";
 
 export const add = new Command("add")
     .description("Add a new component")
@@ -42,6 +43,9 @@ async function addAction(componentId) {
         await copyFile({ fileName, content });
     }
 
+    if (tailwindAdditionalConfig != {}) {
+        applyTailwindConfig({ newConfig: tailwindAdditionalConfig });
+    }
     console.log(chalk.green(`✔ Component ${component.id} added successfully!`));
 
     async function decodeLocations() {
