@@ -67,8 +67,13 @@ export async function applyTailwindConfig({ newConfig }) {
             if (properties.hasOwnProperty(key)) {
                 const value = properties[key];
                 const existingProperty = activeNode.properties.find(
-                    (property) => t.isObjectProperty(property) && t.isIdentifier(property.key, { name: key })
-                );
+                    (property) => t.isObjectProperty(property) && (
+                        property.key.extra?.raw == key || 
+                        property.key.extra?.raw == `"${key}"` || 
+                        property.key.extra?.raw == `'${key}'` || 
+                        property.key.name == key 
+                    )
+                )
                 if (existingProperty) {
                     if (t.isObjectExpression(existingProperty.value) && typeof value === 'object') {
                         assignValues(existingProperty.value, value);
@@ -90,15 +95,15 @@ export async function applyTailwindConfig({ newConfig }) {
     console.log(output.code);
 }
 
-const testConfig = {
-    darkMode: ['newclass'],
-    theme: {
-        extend: {
-            colors: {
-                newcolor: "#333"
-            }
-        }
-    }
-}
+// const testConfig = {
+//     darkMode: ['newclass'],
+//     'theme': {
+//         extend: {
+//             colors: {
+//                 newcolor: "#333"
+//             }
+//         }
+//     }
+// }
 
-applyTailwindConfig({ newConfig: testConfig })
+// applyTailwindConfig({ newConfig: testConfig })
