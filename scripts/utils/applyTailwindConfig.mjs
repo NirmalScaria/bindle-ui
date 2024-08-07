@@ -92,6 +92,7 @@ export async function applyTailwindConfig({ newConfig }) {
     }
 
     const output = generate.default(ast, {}, codeString);
+    await fs.writeFile(filePath, output.code);
 }
 
 // const testConfig = {
