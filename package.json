@@ -1,6 +1,6 @@
 {
     "name": "bindle-ui",
-    "version": "0.0.0",
+    "version": "0.0.1",
     "description": "A mega library of UI components for Javascript and React",
     "scripts": {
         "build": "copyfiles '**/*' build/ && cd build",
