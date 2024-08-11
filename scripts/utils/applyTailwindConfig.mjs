@@ -90,7 +90,7 @@ export async function applyTailwindConfig({ newConfig }) {
                         });
                     }
                 } else {
-                    const newProperty = t.objectProperty(t.identifier(key), t.valueToNode(value));
+                    const newProperty = t.objectProperty(t.stringLiteral(key), t.valueToNode(value));
                     activeNode.properties.push(newProperty);
                 }
             }
