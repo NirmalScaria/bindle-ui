@@ -58,6 +58,12 @@ export async function applyTailwindConfig({ newConfig }) {
                 if (t.isIdentifier(path.node.id, { name: exportedName }) && t.isObjectExpression(path.node.init)) {
                     assignValues(path.node.init, newConfig);
                 }
+                else if (t.isIdentifier(path.node.id, { name: exportedName }) && t.isTSSatisfiesExpression(path.node.init)) {
+                    const expression = path.node.init.expression;
+                    if (t.isObjectExpression(expression) && t.isIdentifier(path.node.id, { name: exportedName })) {
+                        assignValues(expression, newConfig);
+                    }
+                }
             }
         });
     }
@@ -68,10 +74,10 @@ export async function applyTailwindConfig({ newConfig }) {
                 const value = properties[key];
                 const existingProperty = activeNode.properties.find(
                     (property) => t.isObjectProperty(property) && (
-                        property.key.extra?.raw == key || 
-                        property.key.extra?.raw == `"${key}"` || 
-                        property.key.extra?.raw == `'${key}'` || 
-                        property.key.name == key 
+                        property.key.extra?.raw == key ||
+                        property.key.extra?.raw == `"${key}"` ||
+                        property.key.extra?.raw == `'${key}'` ||
+                        property.key.name == key
                     )
                 )
                 if (existingProperty) {
