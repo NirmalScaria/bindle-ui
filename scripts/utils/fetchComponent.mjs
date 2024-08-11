@@ -1,7 +1,7 @@
 import chalk from "chalk";
 
 export async function fetchComponent(componentId, useTypescript) {
-    const url = `http://localhost:3000/api/getComponent?componentId=${componentId}&useTypescript=${useTypescript}`;
+    const url = `https://bindle-ui-dash.vercel.app/api/getComponent?componentId=${componentId}&useTypescript=${useTypescript}`;
     try {
         var response = await fetch(url);
         response = await response.json();
