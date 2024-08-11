@@ -28,7 +28,7 @@ async function addAction(componentId) {
     await decodeLocations();
     var remoteInstallCommand = "npm install ";
     for (const remoteDependancy of remoteDependencies) {
-        remoteInstallCommand += `${remoteDependancy.name}@${remoteDependancy.version} `;
+        remoteInstallCommand += `"${remoteDependancy.name}@${remoteDependancy.version}" `;
     }
     if (remoteDependencies.length > 0) {
         console.log(chalk.blue("Installing remote dependancies..."));
